@@ -1,0 +1,7 @@
+experiment_id,name,hypothesis,unit_type,surface,primary_metric,planned_treatment_share,start_date,end_date,status,owner
+1,onboarding_checklist,A guided checklist raises 7-day activation,user,onboarding,activation_7d,0.5,2023-09-04,2023-10-15,completed,pm_ava
+2,new_onboarding_flow,Streamlined first-run flow raises activation,user,onboarding,activation_7d,0.5,2024-02-05,2024-03-18,completed,pm_ava
+3,pricing_page_redesign,Clearer pricing page lifts paid conversion,account,pricing,paid_conversion_30d,0.5,2024-05-06,2024-06-17,completed,pm_ravi
+4,invite_prompt,Prompt to invite a teammate raises early invites,user,onboarding,teammate_invited_3d,0.5,2024-08-05,2024-09-16,completed,pm_li
+5,annual_discount_banner,Annual-savings banner shifts mix to annual,account,checkout,annual_share,0.5,2025-01-13,2025-02-24,completed,pm_ravi
+6,dark_mode_default,Dark mode default improves engagement,user,settings,activation_7d,0.5,2025-04-07,2025-05-19,completed,pm_li

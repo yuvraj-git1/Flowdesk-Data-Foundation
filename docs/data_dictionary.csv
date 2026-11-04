@@ -1,0 +1,198 @@
+table,column,type,primary_key,foreign_key,nullable,description,values
+accounts,account_id,BIGINT,True,,False,Primary key.,
+accounts,created_at,TIMESTAMP,False,,False,Signup time (UTC).,
+accounts,company_name,VARCHAR,False,,False,Company/team name as typed by the owner.,
+accounts,email_domain,VARCHAR,False,,True,Owner's email domain; NULL for personal webmail.,
+accounts,industry,VARCHAR,False,,True,Self-reported industry; often blank.,software | agency | marketing | education | finance | healthcare | retail | manufacturing | nonprofit | other
+accounts,company_size_band,VARCHAR,False,,True,Self-reported company size.,1-10 | 11-50 | 51-200 | 201-1000 | 1000+
+accounts,country,VARCHAR,False,,True,ISO-3166 alpha-2 country code.,2-letter code
+accounts,billing_currency,VARCHAR,False,,False,Currency the account is invoiced in.,USD | EUR | GBP | CAD | INR
+accounts,timezone,VARCHAR,False,,True,Account IANA timezone.,e.g. America/New_York
+accounts,signup_source,VARCHAR,False,,True,Raw acquisition label captured at signup; not normalized.,
+accounts,utm_source,VARCHAR,False,,True,"UTM source at signup, if any.",
+accounts,utm_medium,VARCHAR,False,,True,"UTM medium at signup, if any.",
+accounts,utm_campaign,VARCHAR,False,,True,"UTM campaign at signup, if any.",
+accounts,acquisition_motion,VARCHAR,False,,False,How the account was acquired.,self_serve | sales_assisted
+accounts,lead_id,BIGINT,False,leads.lead_id,True,Lead record for sales-assisted accounts.,
+accounts,owner_user_id,BIGINT,False,users.user_id,True,User who created the account.,
+accounts,sso_enabled,BOOLEAN,False,,False,SAML/SSO turned on (Business plan feature).,
+accounts,lifecycle_stage,VARCHAR,False,,False,State as of snapshot date.,free | paid | churned
+accounts,first_paid_at,TIMESTAMP,False,,True,First successful paid charge; NULL if never paid.,
+accounts,churned_at,TIMESTAMP,False,,True,When paid subscription ended; NULL if not churned.,
+users,user_id,BIGINT,True,,False,Primary key.,
+users,account_id,BIGINT,False,accounts.account_id,False,Workspace the user belongs to.,
+users,email,VARCHAR,False,,False,Synthetic email address.,
+users,role,VARCHAR,False,,False,Workspace role.,owner | admin | member
+users,created_at,TIMESTAMP,False,,False,When the user joined (UTC).,
+users,invited_by_user_id,BIGINT,False,users.user_id,True,"Inviter, if the user joined via invite.",
+users,first_platform,VARCHAR,False,,True,Platform of first session.,web | ios | android
+users,is_sso_provisioned,BOOLEAN,False,,False,Created automatically by SSO/SCIM.,
+users,is_active,BOOLEAN,False,,False,Not deactivated as of snapshot date.,
+users,deactivated_at,TIMESTAMP,False,,True,"Deactivation time, if any.",
+users,last_active_at,TIMESTAMP,False,,True,Last event timestamp seen.,
+events,event_id,BIGINT,True,,False,Primary key.,
+events,event_ts,TIMESTAMP,False,,False,When the event occurred (documented as UTC).,
+events,ingested_at,TIMESTAMP,False,,True,When the event reached the warehouse.,
+events,user_id,BIGINT,False,users.user_id,False,Acting user.,
+events,account_id,BIGINT,False,accounts.account_id,False,Workspace of the acting user.,
+events,event_name,VARCHAR,False,,False,Event type.,signup_completed | session_start | project_created | task_created | task_completed | task_assigned | comment_added | teammate_invited | invite_accepted | integration_connected | paywall_viewed | upgrade_clicked | checkout_started | subscription_started
+events,platform,VARCHAR,False,,False,Client platform.,web | ios | android
+events,app_version,VARCHAR,False,,True,Client app version.,"semver, e.g. 4.1.3"
+events,session_id,VARCHAR,False,,True,Client session identifier.,
+events,project_id,BIGINT,False,,True,"Project touched, if applicable.",
+events,task_id,BIGINT,False,,True,"Task touched, if applicable.",
+events,properties,VARCHAR,False,,True,JSON string of extra properties.,
+subscriptions,subscription_id,BIGINT,True,,False,Primary key.,
+subscriptions,account_id,BIGINT,False,accounts.account_id,False,Owning account.,
+subscriptions,plan,VARCHAR,False,,False,Current plan.,pro | business
+subscriptions,billing_interval,VARCHAR,False,,False,Billing cadence.,monthly | annual
+subscriptions,seats,INTEGER,False,,False,Seats currently purchased.,
+subscriptions,price_per_seat_usd,"DECIMAL(8,2)",False,,False,Effective USD price per seat per month after interval discount.,
+subscriptions,mrr_usd,"DECIMAL(12,2)",False,,False,Current normalized monthly recurring revenue (USD). 0 if canceled.,
+subscriptions,status,VARCHAR,False,,False,Subscription state.,active | past_due | canceled
+subscriptions,started_at,TIMESTAMP,False,,False,Subscription start (UTC).,
+subscriptions,current_period_start,DATE,False,,True,Start of the current billing period.,
+subscriptions,current_period_end,DATE,False,,True,End of the current billing period.,
+subscriptions,canceled_at,TIMESTAMP,False,,True,"Cancellation time, if canceled.",
+subscriptions,cancellation_source,VARCHAR,False,,True,Who/what ended it.,user | payment_failure | admin
+subscriptions,cancel_reason_self_reported,VARCHAR,False,,True,Free-text/menu reason given at cancel; often missing or vague.,
+plan_changes,plan_change_id,BIGINT,True,,False,Primary key.,
+plan_changes,subscription_id,BIGINT,False,subscriptions.subscription_id,False,Subscription changed.,
+plan_changes,account_id,BIGINT,False,accounts.account_id,False,Owning account.,
+plan_changes,changed_at,TIMESTAMP,False,,False,Change time (UTC).,
+plan_changes,change_type,VARCHAR,False,,False,Kind of change.,start_paid | upgrade | downgrade | interval_switch | seat_change | cancel
+plan_changes,from_plan,VARCHAR,False,,True,Plan before (NULL for first paid start).,free | pro | business
+plan_changes,to_plan,VARCHAR,False,,True,Plan after.,free | pro | business
+plan_changes,from_interval,VARCHAR,False,,True,Interval before.,monthly | annual
+plan_changes,to_interval,VARCHAR,False,,True,Interval after.,monthly | annual
+plan_changes,from_seats,INTEGER,False,,True,Seats before.,
+plan_changes,to_seats,INTEGER,False,,True,Seats after.,
+plan_changes,mrr_before_usd,"DECIMAL(12,2)",False,,True,MRR before change (USD).,
+plan_changes,mrr_after_usd,"DECIMAL(12,2)",False,,True,MRR after change (USD).,
+plan_changes,initiated_by,VARCHAR,False,,True,Who made the change.,customer | sales | system
+invoices,invoice_id,BIGINT,True,,False,Primary key.,
+invoices,invoice_number,VARCHAR,False,,False,"Human-readable number, e.g. FD-2024-001234.",
+invoices,subscription_id,BIGINT,False,subscriptions.subscription_id,False,Subscription billed.,
+invoices,account_id,BIGINT,False,accounts.account_id,False,Account billed.,
+invoices,issued_at,TIMESTAMP,False,,False,Issue time.,
+invoices,due_at,TIMESTAMP,False,,True,Payment due time.,
+invoices,period_start,DATE,False,,False,Service period start.,
+invoices,period_end,DATE,False,,False,Service period end.,
+invoices,billing_reason,VARCHAR,False,,True,Why the invoice was created.,subscription_create | subscription_cycle | subscription_update | manual
+invoices,seats_billed,INTEGER,False,,False,Seats charged on this invoice.,
+invoices,currency,VARCHAR,False,,False,Invoice currency.,USD | EUR | GBP | CAD | INR
+invoices,unit_price,"DECIMAL(10,2)",False,,True,Price per seat per month in invoice currency.,
+invoices,subtotal,"DECIMAL(12,2)",False,,False,"Before discount and tax, in invoice currency.",
+invoices,discount_amount,"DECIMAL(12,2)",False,,False,Coupon discount applied.,
+invoices,tax_amount,"DECIMAL(12,2)",False,,False,"Tax, in invoice currency.",
+invoices,total_amount,"DECIMAL(12,2)",False,,False,"Amount due, in invoice currency.",
+invoices,fx_rate_to_usd,DOUBLE,False,,True,Rate used to convert to USD; may be missing.,
+invoices,total_usd,"DECIMAL(12,2)",False,,True,total_amount converted to USD; may be missing.,
+invoices,coupon_redemption_id,BIGINT,False,coupon_redemptions.redemption_id,True,"Redemption applied, if any.",
+invoices,status,VARCHAR,False,,False,Invoice state.,paid | void | uncollectible
+payments,payment_id,BIGINT,True,,False,Primary key.,
+payments,invoice_id,BIGINT,False,invoices.invoice_id,False,Invoice being paid.,
+payments,account_id,BIGINT,False,accounts.account_id,False,Paying account.,
+payments,attempt_number,SMALLINT,False,,False,1 = first try; 2-4 = retries.,
+payments,attempted_at,TIMESTAMP,False,,False,Attempt time.,
+payments,amount,"DECIMAL(12,2)",False,,False,"Amount attempted, in `currency`.",
+payments,currency,VARCHAR,False,,False,Payment currency.,USD | EUR | GBP | CAD | INR
+payments,status,VARCHAR,False,,False,Outcome.,succeeded | failed
+payments,failure_code,VARCHAR,False,,True,Reason for failure.,card_declined | insufficient_funds | expired_card | processor_error
+payments,payment_method,VARCHAR,False,,True,Method used.,card | ach | wire
+payments,processor_ref,VARCHAR,False,,True,Payment processor reference.,
+refunds,refund_id,BIGINT,True,,False,Primary key.,
+refunds,payment_id,BIGINT,False,payments.payment_id,False,Payment refunded.,
+refunds,invoice_id,BIGINT,False,invoices.invoice_id,False,Invoice refunded.,
+refunds,account_id,BIGINT,False,accounts.account_id,False,Account refunded.,
+refunds,refunded_at,TIMESTAMP,False,,False,Refund time.,
+refunds,amount,"DECIMAL(12,2)",False,,False,"Refund amount, in `currency`.",
+refunds,currency,VARCHAR,False,,False,Refund currency.,USD | EUR | GBP | CAD | INR
+refunds,reason,VARCHAR,False,,True,Refund reason.,requested_by_customer | duplicate_charge | service_issue | goodwill | fraud
+refunds,status,VARCHAR,False,,False,Refund state.,succeeded | pending | failed
+refunds,issued_by,VARCHAR,False,,True,Support agent id or 'system'.,
+refunds,processor_refund_id,VARCHAR,False,,True,Processor reference.,
+coupons,coupon_id,BIGINT,True,,False,Primary key.,
+coupons,code,VARCHAR,False,,False,Redemption code.,
+coupons,campaign,VARCHAR,False,,True,Campaign the coupon belongs to.,
+coupons,discount_type,VARCHAR,False,,False,Percent or fixed amount.,percent | fixed
+coupons,percent_off,DOUBLE,False,,True,Percent off (0-100) if percent type.,
+coupons,amount_off_usd,"DECIMAL(10,2)",False,,True,Amount off per invoice if fixed type.,
+coupons,duration,VARCHAR,False,,False,How long the discount lasts.,once | repeating | forever
+coupons,duration_months,INTEGER,False,,True,"Months, if duration = repeating.",
+coupons,stackable,BOOLEAN,False,,False,Whether it may combine with other coupons.,
+coupons,max_redemptions,INTEGER,False,,True,"Redemption cap, if any.",
+coupons,valid_from,DATE,False,,False,First valid day.,
+coupons,valid_to,DATE,False,,True,Last valid day.,
+coupon_redemptions,redemption_id,BIGINT,True,,False,Primary key.,
+coupon_redemptions,coupon_id,BIGINT,False,coupons.coupon_id,False,Coupon used.,
+coupon_redemptions,account_id,BIGINT,False,accounts.account_id,False,Account redeeming.,
+coupon_redemptions,subscription_id,BIGINT,False,subscriptions.subscription_id,False,Subscription discounted.,
+coupon_redemptions,redeemed_at,TIMESTAMP,False,,False,Redemption time.,
+coupon_redemptions,discount_ends_at,TIMESTAMP,False,,True,When the discount lapses; NULL if forever.,
+coupon_redemptions,redemption_channel,VARCHAR,False,,True,Where it was applied.,checkout | sales_rep | support
+seat_usage_monthly,account_id,BIGINT,True,accounts.account_id,False,Account.,
+seat_usage_monthly,month_start,DATE,True,,False,First day of the month.,
+seat_usage_monthly,plan,VARCHAR,False,,True,Plan at month end.,free | pro | business
+seat_usage_monthly,seats_billed,INTEGER,False,,False,Seats on the paid subscription (0 for free).,
+seat_usage_monthly,seats_provisioned,INTEGER,False,,False,Seats existing in the workspace.,
+seat_usage_monthly,seats_sso_provisioned,INTEGER,False,,False,"Of provisioned, created via SSO/SCIM.",
+seat_usage_monthly,seats_active,INTEGER,False,,False,Seats with at least one event in the month.,
+experiments,experiment_id,BIGINT,True,,False,Primary key.,
+experiments,name,VARCHAR,False,,False,Short name.,
+experiments,hypothesis,VARCHAR,False,,True,What the team expected.,
+experiments,unit_type,VARCHAR,False,,False,Randomization unit.,user | account
+experiments,surface,VARCHAR,False,,True,Product area tested.,
+experiments,primary_metric,VARCHAR,False,,False,Decision metric.,
+experiments,planned_treatment_share,DOUBLE,False,,False,Intended share assigned to treatment.,
+experiments,start_date,DATE,False,,False,Start date.,
+experiments,end_date,DATE,False,,True,End date.,
+experiments,status,VARCHAR,False,,False,Experiment state.,completed | running | stopped_early
+experiments,owner,VARCHAR,False,,True,Owning PM/analyst.,
+experiment_assignments,assignment_id,BIGINT,True,,False,Primary key.,
+experiment_assignments,experiment_id,BIGINT,False,experiments.experiment_id,False,Experiment.,
+experiment_assignments,unit_id,BIGINT,False,,False,"user_id or account_id, per experiments.unit_type.",
+experiment_assignments,variant,VARCHAR,False,,False,Assigned variant.,control | treatment
+experiment_assignments,assigned_at,TIMESTAMP,False,,False,Assignment time (UTC).,
+experiment_assignments,platform,VARCHAR,False,,True,Platform at assignment.,web | ios | android
+experiment_assignments,first_exposed_at,TIMESTAMP,False,,True,First time the variant was shown; NULL if never exposed.,
+marketing_spend,spend_id,BIGINT,True,,False,Primary key.,
+marketing_spend,spend_date,DATE,False,,False,Day of spend.,
+marketing_spend,channel,VARCHAR,False,,False,Paid channel.,paid_search | paid_social | review_site | affiliate
+marketing_spend,campaign,VARCHAR,False,,False,Campaign name.,
+marketing_spend,impressions,BIGINT,False,,True,Impressions served.,
+marketing_spend,clicks,BIGINT,False,,True,Clicks.,
+marketing_spend,spend_amount,"DECIMAL(12,2)",False,,False,Spend in `currency`.,
+marketing_spend,currency,VARCHAR,False,,False,Spend currency.,USD | EUR | GBP | CAD | INR
+marketing_spend,spend_usd,"DECIMAL(12,2)",False,,True,USD equivalent; may be missing.,
+platform_reported_conversions,report_id,BIGINT,True,,False,Primary key.,
+platform_reported_conversions,report_date,DATE,False,,False,Day reported.,
+platform_reported_conversions,channel,VARCHAR,False,,False,Ad platform channel.,paid_search | paid_social | review_site | affiliate
+platform_reported_conversions,campaign,VARCHAR,False,,False,Campaign name.,
+platform_reported_conversions,attribution_model,VARCHAR,False,,True,Platform attribution setting.,click_7d_view_1d | click_28d | click_30d_view_7d
+platform_reported_conversions,platform_signups,INTEGER,False,,False,Signups the platform claims.,
+platform_reported_conversions,platform_paid_conversions,INTEGER,False,,False,Paid conversions the platform claims.,
+platform_reported_conversions,platform_revenue_usd,"DECIMAL(12,2)",False,,True,Revenue the platform claims.,
+leads,lead_id,BIGINT,True,,False,Primary key.,
+leads,created_at,TIMESTAMP,False,,False,Lead creation (UTC).,
+leads,company_name,VARCHAR,False,,True,Company on the lead.,
+leads,email_domain,VARCHAR,False,,True,Contact email domain.,
+leads,company_size_band,VARCHAR,False,,True,Company size.,1-10 | 11-50 | 51-200 | 201-1000 | 1000+
+leads,lead_source,VARCHAR,False,,True,Raw CRM source label; not normalized.,
+leads,lead_status,VARCHAR,False,,False,Current funnel stage.,new | mql | sql | opportunity | won | lost
+leads,owner_rep_id,INTEGER,False,,True,Assigned sales rep.,
+leads,mql_at,TIMESTAMP,False,,True,Became MQL.,
+leads,sql_at,TIMESTAMP,False,,True,Became SQL.,
+leads,opportunity_at,TIMESTAMP,False,,True,Opportunity created.,
+leads,closed_at,TIMESTAMP,False,,True,Won or lost date.,
+leads,deal_arr_usd,"DECIMAL(12,2)",False,,True,Contracted ARR if won.,
+leads,loss_reason,VARCHAR,False,,True,Reason if lost.,
+leads,account_id,BIGINT,False,accounts.account_id,True,"Account created from the lead, if any.",
+sales_touches,touch_id,BIGINT,True,,False,Primary key.,
+sales_touches,lead_id,BIGINT,False,leads.lead_id,False,Lead touched.,
+sales_touches,account_id,BIGINT,False,accounts.account_id,True,"Account touched, if linked.",
+sales_touches,rep_id,INTEGER,False,,False,Sales rep.,
+sales_touches,touched_at,TIMESTAMP,False,,False,Interaction time (UTC).,
+sales_touches,touch_type,VARCHAR,False,,False,Kind of touch.,email | call | demo | trial_extension | contract_sent
+sales_touches,outcome,VARCHAR,False,,True,Result.,no_response | replied | meeting_booked | positive | negative
+sales_touches,duration_minutes,INTEGER,False,,True,Length for calls/demos.,

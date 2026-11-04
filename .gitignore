@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.venv/
+__MACOSX/
+_internal/
+flowdesk.duckdb
+data/csv/
+data/*.parquet
