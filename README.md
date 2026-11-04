@@ -6,7 +6,7 @@ with the answer key for 16 planted problems (B1-B7 billing, P1-P5 product, G1-G4
 
 ## Run
 ```
-git clone <repo-url> flowdesk && cd flowdesk
+git clone https://github.com/yuvraj-git1/Flowdesk-Data-Foundation flowdesk && cd flowdesk
 python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python run_all.py          # ~1 min, ~400 MB disk: schema -> data/csv/*.csv -> flowdesk.duckdb + validation
